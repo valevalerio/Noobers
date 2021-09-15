@@ -18,3 +18,6 @@ Numerical:
   - The current angle of aiming in radians. (1)
 
 Results are interesting and improve the smartness of the AI ArcherBrain in the base, Henri :)
+
+[![AIKAG](http://img.youtube.com/vi/ebdvfBXVXF0/0.jpg)](https://www.youtube.com/watch?v=ebdvfBXVXF0 "AI for KAG")
+[![AIKAG](http://img.youtube.com/vi/Dx4FsNTZOec/0.jpg)](https://www.youtube.com/watch?v=Dx4FsNTZOec "AI for KAG")
