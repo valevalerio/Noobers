@@ -1,14 +1,9 @@
 from typing import ContextManager
-from numpy.lib.index_tricks import CClass
 from sklearn.preprocessing import PolynomialFeatures
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import Ridge
-
-data = []
-hashData = {}
 
 def newDataPoint(oldx):
     posx = (oldx[0])
@@ -23,7 +18,10 @@ def newDataPoint(oldx):
     mag = sum(x*x)**0.5
     newx = [posx,posy,velx,vely,theta,ink,ink2,mag]
     return newx
-with open("../../Cache/arrowStats.cfg",'r') as f:
+print("opening file")
+data = []
+hashData = {}
+with open("./arrowStats.cfg",'r') as f: #"../../Cache/arrowStats.cfg"
     for line in f:
         data.append(line)
 
@@ -46,6 +44,7 @@ with open("../../Cache/arrowStats.cfg",'r') as f:
         else:
             hashData[key]=hashData[key][0],np.array(dataPoints)
         
+print("done")
 c=0
 BigX = []
 BigY = []
@@ -66,9 +65,9 @@ for h in hashData.keys():
     #    continue
     
     #plt.plot(positions[:,0],-positions[:,1],label="shot " +str(c))
-    plt.plot(velocities[:,0],-velocities[:,1],label="shot " +str(c))
-    plt.scatter(velocities[:,0],-velocities[:,1],label="shot " +str(c))
-    plt.scatter(velocities[0,0],-velocities[0,1],c='g',lw=3.0)
+    #plt.plot(velocities[:,0],velocities[:,1],label="shot " +str(c))
+    #plt.scatter(velocities[:,0],velocities[:,1],label="shot " +str(c))
+    #plt.scatter(velocities[0,0],velocities[0,1],c='g',lw=3.0)
     for i,position in enumerate(positions[:-1]):
         inputX = newDataPoint(np.hstack([position,velocities[i]]))
         BigX.append(inputX)
@@ -81,9 +80,12 @@ BigX = np.array(BigX)
 BigY = np.array(BigY)
 poly = PolynomialFeatures(3)
 rid = Ridge()
-clf = make_pipeline(poly, rid) 
+from sklearn.preprocessing import StandardScaler
+clf = make_pipeline(poly,StandardScaler(), rid) 
+from sklearn.neural_network import MLPRegressor
 #clf = MLPRegressor(solver='lbfgs', alpha=1e-3,hidden_layer_sizes=(128), random_state=1,activation='identity')
-#clf = MLPRegressor(solver='adam', alpha=1e-3,hidden_layer_sizes=(12,8), random_state=1,activation='identity',max_iter=300)
+#model = MLPRegressor(solver='adam', alpha=1e-3,hidden_layer_sizes=(20,8), random_state=1,activation='identity',max_iter=900)
+
 clf.fit(BigX,BigY)
 
 #print(clf.loss_)
@@ -91,7 +93,7 @@ print(len(BigX),c,"shots")
 idx = 420
 print(BigX[idx],clf.predict([BigX[idx]]))
 print(BigY[idx]-clf.predict([BigX[idx]]))
-input()
+#input()
 plt.rcParams["figure.figsize"] = (20,10)
 
 c=0
@@ -138,8 +140,8 @@ for h in hashData.keys():
     #predX = clf.predict(inputBigX)
     print(len(velx),len(vely))
 
-    axPos.plot(posX,posY,c='r',linestyle='--',label=("Predicted shot " if c==0 else ''))
-    axVel.plot(velx,vely,c='r',linestyle='--',label=("Predicted shot " if c==0 else ''))
+    axPos.plot(posX,posY,c='r',linestyle='--',label=("Predicted shot " if c==1 else ''))
+    axVel.plot(velx,vely,c='r',linestyle='--',label=("Predicted shot " if c==1 else ''))
     colorPlot = 'r' if magnitude > 15.0 else ('y' if magnitude < 6 else 'g')
     idxForce = 2 if magnitude > 15.0 else (0 if magnitude < 6 else 1)
     shots_force[idxForce]+=1
@@ -151,7 +153,7 @@ plt.show()
 print("SCORE-"*5)
 print(clf.score(BigX,BigY))
 print(shots_force)
-print(poly.get_feature_names())
+print(poly.get_feature_names_out())
 
 def get_poly_angelscript_equations_strings():
     ASfunctionName = "array<double> predict("+", ".join(["float x"+str(i) for i in range(poly.n_input_features_)])+")\n{\n"
@@ -188,14 +190,15 @@ def get_poly_angelscript_equations_strings():
     ASreturn+="\treturn res;\n}"
     return [ASfunctionName] + caching + equations +[ASreturn]
 
-with open('RidgeRegressorAS.as',"w") as file:
-    l = get_poly_angelscript_equations_strings()
-    for i, element in enumerate(l):
-        variableString = ""
-        if i <= 1 or i==len(l)-1:
-            file.write(f"{element}")
-        else:
-            file.write(f"\tdouble q{i-2} = {element};\n")
+if False:
+    with open('RidgeRegressorAS.as',"w") as file:
+        l = get_poly_angelscript_equations_strings()
+        for i, element in enumerate(l):
+            variableString = ""
+            if i <= 1 or i==len(l)-1:
+                file.write(f"{element}")
+            else:
+                file.write(f"\tdouble q{i-2} = {element};\n")
 
 
 

@@ -9,7 +9,7 @@ data = []
 hashData = {}
 
 
-with open("../../Cache/arrowStats.cfg",'r') as f:
+with open("arrowStats.cfg",'r') as f:
     for line in f:
         data.append(line)
 
@@ -49,7 +49,7 @@ for h in hashData.keys():
     #print(c)
 #plt.show()
 #clf = MLPRegressor(solver='lbfgs', alpha=1e-1,hidden_layer_sizes=(12, 8), random_state=1,activation='identity')
-
+'''
 poly = PolynomialFeatures(3)
 rid = Ridge(alpha=1.0)
 clf = make_pipeline(poly, rid) 
@@ -104,6 +104,39 @@ plt.show()
 print("SCORE-"*5)
 print(clf.score(BigX,BigY))
 
+'''
+import numpy as np
+import matplotlib.pyplot as plt
 
-#print(clf.coefs_)
+# Load your data
+positions = np.array(BigX)[:,:2]  
+velocities = np.array(BigX)[:,2:]  
 
+# Convert positions and velocities to polar coordinates
+r_positions = np.sqrt(positions[:, 0]**2 + positions[:, 1]**2)
+theta_positions = np.arctan2(positions[:, 1], positions[:, 0])
+r_velocities = np.sqrt(velocities[:, 0]**2 + velocities[:, 1]**2)
+theta_velocities = np.arctan2(velocities[:, 1], velocities[:, 0])
+
+# Fit a polynomial model to the data for each dimension
+degree = 2  # change this to fit a polynomial of a different degree
+coefficients_r = np.polyfit(r_positions, r_velocities, degree)
+coefficients_theta = np.polyfit(theta_positions, theta_velocities, degree)
+polynomial_r = np.poly1d(coefficients_r)
+polynomial_theta = np.poly1d(coefficients_theta)
+
+# Print the fitted models
+print(f'Fitted model for r velocity: {polynomial_r}')
+print(f'Fitted model for theta velocity: {polynomial_theta}')
+
+# Plot the actual vs predicted velocities for each dimension
+fig, axs = plt.subplots(2)
+axs[0].scatter(r_positions, r_velocities)
+axs[0].plot(r_positions, polynomial_r(r_positions), color='red')
+axs[0].set_xlabel('r positions')
+axs[0].set_ylabel('r velocities')
+axs[1].scatter(theta_positions, theta_velocities)
+axs[1].plot(theta_positions, polynomial_theta(theta_positions), color='red')
+axs[1].set_xlabel('theta positions')
+axs[1].set_ylabel('theta velocities')
+plt.show()

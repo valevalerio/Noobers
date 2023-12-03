@@ -214,8 +214,7 @@ void DefaultChaseBlobVale(CBlob@ blob, CBlob @target)
 				break;
 
 			case CBrain::searching:
-				//if (sv_test)
-				//	set_emote( blob, Emotes::dots );
+				set_emote( blob, "dots" );
 				break;
 
 			case CBrain::stuck:
@@ -278,6 +277,7 @@ void SearchTarget(CBrain@ this, const bool seeThroughWalls = false, const bool s
 
 		if (target !is oldTarget)
 		{
+			
 			onChangeTarget(blob, target, oldTarget);
 		}
 	}
@@ -332,8 +332,8 @@ void DefaultChaseBlob(CBlob@ blob, CBlob @target)
 				break;
 
 			case CBrain::searching:
-				//if (sv_test)
-				//	set_emote( blob, Emotes::dots );
+				
+				set_emote( blob, "dots" );
 				break;
 
 			case CBrain::stuck:
@@ -354,11 +354,8 @@ void DefaultChaseBlob(CBlob@ blob, CBlob @target)
 }
 void onChangeTarget(CBlob@ blob, CBlob@ target, CBlob@ oldTarget)
 {
-	// !!!
-	if (oldTarget is null)
-	{
-		set_emote(blob, Emotes::attn, 1);
-	}
+	
+	set_emote(blob, "attn", 1);
 }
 
 bool LoseTarget(CBrain@ this, CBlob@ target)

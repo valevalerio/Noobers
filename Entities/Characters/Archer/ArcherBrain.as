@@ -211,7 +211,7 @@ float fit_score(CBlob@ this)
 	score = (na<10 ? na : (10-(na-10) ));
 	int kills = this.getPlayer().getKills();
 	int assists = this.getPlayer().getAssists();
-	score = score + (kills*100+assists*30)*(na+1);
+	score = score + (kills*100+assists*30)+(na+1);
 	this.getPlayer().setScore(score);
 	return score;
 }
@@ -270,7 +270,7 @@ void onRender(CSprite@ this){
 	
 	//GUI::DrawLine(this.getBlob().getPosition(),targets[idx], SColor(Color3rd,0,Color3rd,255));
 	Vec2f pos1 = this.getBlob().getPosition()+Vec2f(this.isFacingLeft() ? 2 : -2, -2);//+Vec2f(0.0,(team==0 ? -20.0 : 0.0));
-	if (this.getBlob().getPlayer().isBot() or true){// or idx==argmax(goodArrows)){
+	if (idx==argmax(goodArrows) and this.getBlob().getPlayer().isBot()){ //not  and false){// or ){
 		float a;
 		array<double> predictedOutput(4);
 		array<Vec2f> midPoints(3);
@@ -383,7 +383,8 @@ void onSetPlayer(CBlob@ this, CPlayer@ player)
 				print("Init new NN for "+idx);
 				if (getBestMindName() == "BN"+idx)
 					@Minds[idx] =@NeuralNetwork("BN"+idx);//@NeuralNetwork(14,8,2);// 
-				else{
+				else
+				{
 					@Minds[idx] = @NeuralNetwork(8,10,1,-0.5,0.5);
 					Minds[idx].saveToFile("NN"+idx);
 
@@ -430,13 +431,14 @@ f32 onHit(CBlob@ this, Vec2f worldPoint, Vec2f velocity, f32 damage, CBlob@ hitt
 		//print(this.getPlayer().getUsername()+" is this and hitter blob is "+hitterBlob.getName());
 		//print(this.getPosition()+" is position, "+velocity.Length()+" is the velocity "+ worldPoint+" is position ");
 		if (hitterBlob.getDamageOwnerPlayer().isBot())
-		{
+		{	
 			int idx = myAtoi(hitterBlob.getDamageOwnerPlayer().getUsername());
 			float arrowDistance = Maths::Max(2.0f,(hitterBlob.getPosition()-targets[idx]).Length());
 			if (hitterBlob.getDamageOwnerPlayer().getBlob() !is null)
 			{
 				float targetDistance = (hitterBlob.getDamageOwnerPlayer().getBlob().getPosition()-targets[idx]).Length();
 				float multiplier = ((targetDistance*targetDistance)/(arrowDistance));
+				set_emote(hitterBlob.getDamageOwnerPlayer().getBlob(),"thumbsup");
 				/*print("arrow distance is "+arrowDistance);
 				print("target distance is "+targetDistance);
 				print("arrow distance is "+multiplier);*/
@@ -556,7 +558,7 @@ void onInit(CBrain@ this)
 }
 
 void onTick(CBrain@ this){
-	bool guard = false;//(this.getBlob().getPlayer().getTeamNum()==1)
+	bool guard = false; //this.getBlob().getPlayer().getTeamNum()==1;
 	if (guard)
 		onTickBASIC(this);
 	else
@@ -596,9 +598,9 @@ void onTickVALE(CBrain@ this)
 		f32 distance;
 		const bool visibleTarget = isVisible(blob, target, distance);
 		distance = (targets[idx]-blob.getPosition()).Length();
-		const float difficulty = 0.0;//blob.getPlayer().getTeamNum()*15.0;//blob.get_s32("difficulty");
+		const float difficulty = blob.getPlayer().getTeamNum();//blob.get_s32("difficulty");
 		//bool vistTargGuard = (difficulty==0.0 ? !visibleTarget : true) ;
-		if ((gotarrows) and (distance > 100.0f * (difficulty+1.0)))// and vistTargGuard))
+		if ((gotarrows) and (distance > 100.0f * (difficulty+1.0)))// and vistTargGuard)) * (difficulty+1.0))
 		{				
 				strategy = Strategy::chasing;
 				if ((getGameTime()-blob.get_u32("start charge time"))/(ArcherParams::ready_time/2.0 + ArcherParams::shoot_period_2)>0.7)
@@ -611,7 +613,6 @@ void onTickVALE(CBrain@ this)
 		}
 		
 		UpdateBlobVale(blob, target, strategy);
-
 		// lose target if its killed (with random cooldown)
 
 		if (LoseTarget(this, target))
@@ -623,28 +624,30 @@ void onTickVALE(CBrain@ this)
 		blob.set_u8("strategy", strategy);
 	}
 	FloatInWater(blob);
-	if (XORRandom(10)==0)
-		switch (blob.get_u8("strategy"))
-			{
-				case Strategy::idle:
-					set_emote( blob, Emotes::dots);
-					break;
-				case Strategy::retreating:
-					set_emote(blob,Emotes::disappoint);
-					break;
-				case Strategy::attacking:
-					set_emote(blob,Emotes::finger);
-					break;
-				case Strategy::chasing:
-					if (blob.getTeamNum()==0)
-						set_emote(blob,Emotes::right);
-					else
-						set_emote(blob,Emotes::left);
-					break;
-			}
+	 if (XORRandom(10)==0)
+	 	switch (blob.get_u8("strategy"))
+	 		{
+	 			case Strategy::idle:
+	 				set_emote( blob, "dots");
+	 				break;
+	 			case Strategy::retreating:
+	 				set_emote(blob,"disappoint");
+	 				break;
+	 			case Strategy::attacking:
+	 				set_emote(blob,"finger",1);
+	 				break;
+	 			case Strategy::chasing:
+	 				if (blob.getTeamNum()==0)
+	 					set_emote(blob,"mad");
+	 				else
+	 					set_emote(blob,"mad");
+	 				break;
+	 		}
 	if (target==null){
-		set_emote( blob, Emotes::question );
+		set_emote( blob, "question" );
 	}
+
+	3;
 }
 
 void UpdateBlobVale(CBlob@ blob, CBlob@ target, const u8 strategy)
@@ -652,7 +655,7 @@ void UpdateBlobVale(CBlob@ blob, CBlob@ target, const u8 strategy)
 	int idx = myAtoi(blob.getPlayer().getUsername());
 	Vec2f targetPos = target.getPosition();
 	Vec2f myPos = blob.getPosition();
-	JustGo2(blob, target);
+	//JustGo2(blob, target);
 	JumpOverObstacles(blob);
 	if (strategy == Strategy::chasing)
 	{
@@ -722,11 +725,11 @@ void UpdateBlobVale(CBlob@ blob, CBlob@ target, const u8 strategy)
 		
 		//AIout = (inpt4NN[3]<1.0)or (inpt4NN[5]<1.0)or (inpt4NN[4]<1.0) ? Maths::Min(inpt4NN[3],Maths::Min(inpt4NN[4],inpt4NN[5]))*0.1 : 1.0;
 		//AIout = Maths::Cos(inpt4NN[7]+PI/2);// (inpt4NN[5]<2.0) ? 0.1 : 1.0;
-		if (
+		if ((
 			TargetOnMAXTraj or
 			TargetOnMEDTraj  or
 			TargetOnMINTraj 
-		)
+		) and false)
 			AIout *=0.1;
 
 		currentAngle[idx]+=(PI/180.0)*AIout;
